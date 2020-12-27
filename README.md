@@ -1,8 +1,8 @@
-# Cyberpunk 2077 - Breach Protocol Solver
+# Cyberpunk 2077 - Breach Protocol Auto Solver
 
 ## Description
 
-The Cyberpunk 2077 "Breach Protocol Solver" is a **Screen Capture + OCR + Solver** for Cyberpunk 2077 on PC.
+The Cyberpunk 2077 "Breach Protocol Auto Solver" is a **Screen Capture + OCR + Auto Solver** for Cyberpunk 2077 on PC.
 
 My goal was to try and make the Breach Protocol minigame as easy as possible for PC players.
 
@@ -16,19 +16,26 @@ I think the minigame is fun, but I felt it detracts from the mood of the rest of
 
 cyber_breach works by either taking a screenshot of a running game, or importing an image from a file.
 
-To run the OCR, cyber_breach needs to know:
+To run the OCR, cyber_breach detects:
+
 1. The buffer length
 2. The matrix length
 3. The sequence length(s)
 
-The screenshot must have **NOTHING COVERING (A) THE MATRIX BOX, (B) THE BUFFER BOX, OR (C) THE SEQUENCE BOX; INCLUDING THE BLUE CURSOR OR THE TERMINAL USED TO EXECUTE THE SOLVER**.  Anything else covered is fine.
+It then performs:
+
+- OCR on the detected boxes
+- Calculates a solution for the puzzle
+- Displays the result on-screen.
+
+The breach protocol must not already be started with any boxes clicked, although pre-INSTALLED sequences are automatically skipped when detected.
 
 The screenshot must also be **DISPLAYED IN 1080P**.  *(I am still working on support for different resolutions!)*
 
-The breach protocol must not be already started with any boxes clicked, although you can skip INSTALLED sequences by entering a `0` in -s 0,N,M... in their place.
+**The screenshot must have nothing covering (A) THE MATRIX BOX, (B) THE BUFFER BOX, or (C) THE SEQUENCE BOX; including THE BLUE CURSOR or ANY WINDOW you used to run the solver**.  Covering any other parts of Breach Protocol oither than the ones listed above is fine.
 
 ```
-Usage: ./cyber_breach [-h] [--path PATH] [--buffer_length BUFFER_LENGTH] [--matrix_length MATRIX_LENGTH] [--sequence_length SEQUENCE_LENGTHS]
+Usage: ./cyber_breach [-h] [--path PATH]
 
 Cyberpunk 2077 - Breach Solver
 
