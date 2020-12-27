@@ -1,5 +1,8 @@
 #include <cstdlib>
 
+#ifdef _WIN32
+#include <cyber/init.hpp>
+#endif
 #include <cyber/detect.hpp>
 #include <cyber/parse.hpp>
 #include <cyber/solve.hpp>
@@ -726,6 +729,9 @@ void test_solve() {
 }
 
 int main(int argc, char * argv[]) {
+#ifdef _WIN32
+    init();
+#endif
 
     test_parse();
     test_solve();

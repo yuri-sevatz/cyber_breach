@@ -5,6 +5,7 @@
 #include <boost/graph/adjacency_list.hpp>
 
 #include <cyber/solve.hpp>
+#include <cyber/term.hpp>
 
 struct vertex_info {
     unsigned char value;
@@ -152,7 +153,10 @@ void solve(
         }
     }
 
-    std::cout << "Matrix:\n";
+    std::cout
+        << "Matrix:\n"
+        << term::high_red
+    ;
     for (std::size_t r = 0; r < matrix.shape()[0]; ++r) {
         for (std::size_t c = 0; c < matrix.shape()[1]; ++c) {
             const Traits::vertex_descriptor vertex{r * matrix.shape()[1] + c};
@@ -163,16 +167,23 @@ void solve(
         }
         std::cout <<  '\n';
     }
+    std::cout << term::reset;
 
-    std::cout << "Buffer:\n" << buffer << '\n';
+    std::cout
+        << "Buffer:\n"
+        << term::high_yellow << buffer << term::reset << '\n';
 
-    std::cout << "Sequences:" << '\n';
+    std::cout
+        << "Sequences:\n"
+        << term::high_cyan
+    ;
     for (auto sequence = sequences.begin(); sequence != sequences.end(); ++sequence) {
         boost::io::ios_base_all_saver _(std::cout);
         std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase;
         std::copy(sequence->begin(), sequence->end(), std::ostream_iterator<int>(std::cout, " "));
         std::cout << '\n';
     }
+    std::cout << term::reset;
 
     std::vector<Traits::vertex_descriptor> result;
     std::vector<Traits::vertex_descriptor> path;
@@ -189,7 +200,25 @@ void solve(
         );
     }
 
-    std::cout << "Output:\n";
+    std::cout
+        << "Path:\n"
+        << term::high_magenta
+    ;
+    for (auto vertex = result.begin(); vertex != result.end(); ++vertex) {
+        std::cout << get(vertex_props, *vertex);
+        if (vertex + 1 != result.end()) {
+            std::cout << ' ';
+        }
+    }
+    std::cout
+        << term::reset
+        << '\n'
+    ;
+
+    std::cout
+        << "Solution:\n"
+        << term::high_green
+    ;
     for (std::size_t r = 0; r < matrix.shape()[0]; ++r) {
         for (std::size_t c = 0; c < matrix.shape()[1]; ++c) {
             const Traits::vertex_descriptor vertex{r * matrix.shape()[1] + c};
@@ -205,15 +234,10 @@ void solve(
         }
         std::cout << '\n';
     }
+    std::cout << term::reset;
 
-    std::cout << "Result:\n";
-    for (auto vertex = result.begin(); vertex != result.end(); ++vertex) {
-        std::cout << get(vertex_props, *vertex);
-        if (vertex + 1 != result.end()) {
-            std::cout << ' ';
-        }
-    }
-    std::cout << '\n';
-
-    std::cout << "Score:\n" << high_score << '\n';
+    std::cout
+        << "Score:\n"
+        << high_score << '/' << ((1 << sequences.size()) - 1) << "\n"
+    ;
 }
