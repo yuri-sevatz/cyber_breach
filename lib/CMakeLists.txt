@@ -4,6 +4,7 @@ project(cyber)
 
 find_package(Boost REQUIRED COMPONENTS graph)
 find_package(OpenCV REQUIRED COMPONENTS core dnn imgcodecs imgproc ml text)
+find_package(termcolor REQUIRED)
 
 set(Boost_USE_MULTITHREADED ON)
 
@@ -15,6 +16,7 @@ set(${PROJECT_NAME}_headers
     include/cyber/layout.hpp
     include/cyber/parse.hpp
     include/cyber/solve.hpp
+    include/cyber/term.hpp
 )
 
 set(${PROJECT_NAME}_sources
@@ -26,9 +28,11 @@ set(${PROJECT_NAME}_sources
 if(WIN32)
     list(APPEND ${PROJECT_NAME}_headers
         include/cyber/capture.hpp
+        include/cyber/init.hpp
     )
     list(APPEND ${PROJECT_NAME}_sources
         src/cyber/capture.cpp
+        src/cyber/init.cpp
     )
 endif(WIN32)
 

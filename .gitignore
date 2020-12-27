@@ -2,3 +2,4 @@ build/
 .vscode/
 .kdev4/
 *.kdev4
+*.orig

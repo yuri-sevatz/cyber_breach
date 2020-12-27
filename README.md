@@ -68,7 +68,7 @@ mkdir src && cd src
 git clone git@github.com:microsoft/vcpkg.git
 cd vcpkg
 bootstrap-vcpkg.bat
-vcpkg install boost opencv opencv[contrib]
+vcpkg install boost opencv opencv[contrib] termcolor
 cd ..
 git clone git@github.com:yuri-sevatz/cyberpunk-cpp.git
 cd cyberpunk-cpp
