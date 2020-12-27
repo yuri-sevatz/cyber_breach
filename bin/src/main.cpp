@@ -1,6 +1,9 @@
+#include <chrono>
 #include <cstdlib>
+#include <filesystem>
 #include <optional>
 #include <regex>
+#include <sstream>
 #include <string_view>
 
 #include <boost/lexical_cast.hpp>
@@ -15,33 +18,50 @@
 
 void help(std::string_view name) {
     std::cerr
-    << "Usage: " << name << " [-h] [--path PATH]\n"
+    << "Usage: " << name << " [-h] [--load INPUT] [--save OUTPUT]\n"
         << '\n'
         << "Cyberpunk 2077 - Breach Solver\n"
         << "  \n"
         << "optional arguments:\n"
         << "  -h, --help            show this help message and exit\n"
-        << "  --path PATH, -p PATH  input image (default: screen-capture)\n"
+        << "  --load INPUT, -l INPUT\n"
+        << "                        input image to load screenshot (default: screenshot)\n"
+        << "  --save OUTPUT, -s OUTPUT\n"
+        << "                        output dir to save screenshot (default: disabled)\n"
+        << "\n"
+        << "By default, " << name << " will take screenshots from a running copy of CP2077\n";
     ;
 }
 
 int main(int argc, char * argv[]) {
     const std::vector<std::string_view> args(argv, argv + argc);
 
-    std::optional<std::string> path;
+    std::optional<std::filesystem::path> load;
+#ifdef _WIN32
+    std::optional<std::filesystem::path> save;
+#endif
 
     auto argi = args.begin() + 1;
     for (; argi != args.end(); ++argi) {
         if (*argi == "--help" || *argi == "-h") {
             help(args.front());
             return EXIT_FAILURE;
-        } else if (*argi == "--path" || *argi == "-p") {
+        } else if (*argi == "--load" || *argi == "-l") {
             if (++argi != args.end()) {
-                path = *argi;
+                load = *argi;
             } else {
-                std::cerr << "error: argument --path/-p: expected one argument" << std::endl;
+                std::cerr << "error: argument --load/-l: expected one argument" << std::endl;
                 return EXIT_FAILURE;
             }
+#ifdef _WIN32
+        } else if (*argi == "--save" || *argi == "-s") {
+            if (++argi != args.end()) {
+                save = *argi;
+            } else {
+                std::cerr << "error: argument --save/-s: expected one argument" << std::endl;
+                return EXIT_FAILURE;
+            }
+#endif
         } else {
             std::cerr << "error: unrecognized argument: " << *argi << std::endl;
             return EXIT_FAILURE;
@@ -50,8 +70,8 @@ int main(int argc, char * argv[]) {
 
     cv::Mat image;
 
-    if (path) {
-        image = cv::imread(*path);
+    if (load) {
+        image = cv::imread(load->string());
         if (image.empty()) {
             std::cerr << "error: could not open image from path, aborting" << std::endl;
             return EXIT_FAILURE;
@@ -60,8 +80,16 @@ int main(int argc, char * argv[]) {
 #ifdef _WIN32
         image = capture("Cyberpunk 2077 (C) 2020 by CD Projekt RED");
         if (image.empty()) {
-            std::cerr << "error: could not capture screen-shot, aborting" << std::endl;
+            std::cerr << "error: could not capture screenshot, aborting" << std::endl;
             return EXIT_FAILURE;
+        } else if (save) {
+            const std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+            std::ostringstream os;
+            os << std::put_time(std::localtime(&time), "%Y%m%d%H%M%S.png");
+            if (!cv::imwrite((*save / os.str()).string(), image)) {
+                std::cerr << "error: could not save screenshot, aborting" << std::endl;
+                return EXIT_FAILURE;
+            }
         }
 #else
         std::cerr << "error: screen capture not compiled in, aborting" << std::endl;
