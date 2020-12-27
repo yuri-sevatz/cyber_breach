@@ -32,20 +32,9 @@ Usage: ./cyber_breach [-h] [--path PATH] [--buffer_length BUFFER_LENGTH] [--matr
 
 Cyberpunk 2077 - Breach Solver
 
-positional arguments:
-
 optional arguments:
   -h, --help            show this help message and exit
   --path PATH, -p PATH  input image (default: screen-capture)
-
-  --buffer_length BUFFER_LENGTH, -b BUFFER_LENGTH
-                        buffer length (default: auto-detect)
-
-  --matrix_length MATRIX_LENGTH, -m MATRIX_LENGTH
-                        matrix length (default: auto-detect)
-
-  --sequence_lengths SEQUENCE_LENGTHS, -s SEQUENCE_LENGTHS
-                        sequence lengths (default: auto-detect)
 ```
 
 ## Build Dependencies
@@ -123,7 +112,4 @@ wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_best/master/script
 ## TODO
 
 - Automatically install Latin tessdata
-- Detect Buffer Length Automatically
-- Detect Matrix Size Automatically
-- Detect Sequence Lengths Automatically
 - Support Resolutions > 1080P (Need lots of high-quality example images of different screens)

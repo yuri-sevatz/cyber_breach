@@ -33,7 +33,11 @@ inline std::ostream & operator<<(std::ostream & os, const sequences_type & seque
                 os << ", ";
             }
         }
-        os << "}\n";
+        if (r + 1 != sequences.size()) {
+            os << "},\n";
+        } else {
+            os << "}\n";
+        }
     }
     os << '}';
     return os;

@@ -10,11 +10,15 @@ set(Boost_USE_MULTITHREADED ON)
 include_directories(${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
 set(${PROJECT_NAME}_headers
+    include/cyber/common.hpp
+    include/cyber/detect.hpp
+    include/cyber/layout.hpp
     include/cyber/parse.hpp
     include/cyber/solve.hpp
 )
 
 set(${PROJECT_NAME}_sources
+    src/cyber/detect.cpp
     src/cyber/parse.cpp
     src/cyber/solve.cpp
 )

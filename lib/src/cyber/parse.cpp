@@ -4,17 +4,33 @@
 
 #include <opencv2/text/ocr.hpp>
 
+#include <cyber/layout.hpp>
 #include <cyber/parse.hpp>
 
-matrix_type parse_matrix(cv::text::OCRTesseract & ocr, const parse_input & input) {
-    matrix_type matrix(boost::extents[input.matrix_length][input.matrix_length]);
+matrix_type parse_matrix(cv::text::OCRTesseract & ocr, cv::Mat image, matrix_length_type matrix_length) {
+    matrix_type matrix(boost::extents[matrix_length][matrix_length]);
 
-    const cv::Size size(64, 64);
-    const cv::Point begin(490 - (size.width / 2) * input.matrix_length, 346);
+    // The position of the matrix left border
+    const cv::Point matrix_cell_begin(
+        matrix_border_topcenter.x - (matrix_cell_size.width / 2) * matrix_length + 2,
+        matrix_border_topcenter.y + matrix_margin_topleft.height
+    );
 
-    for (int row = 0; row != input.matrix_length; ++row) {
-        for(int col = 0; col != input.matrix_length; ++col) {
-            cv::Mat cell = input.image(cv::Rect(begin.x + col * size.width, begin.y + row * size.height, size.width, size.height));
+    // The vector between the first cell and the ith + 1 cell
+    const cv::Size matrix_cell_step(
+        matrix_cell_size.width + matrix_cell_padding.width,
+        matrix_cell_size.height + matrix_cell_padding.height
+    );
+
+    for (int row = 0; row != matrix_length; ++row) {
+        for(int col = 0; col != matrix_length; ++col) {
+            const cv::Rect cell_rect = cv::Rect(
+                matrix_cell_begin.x + col * matrix_cell_step.width,
+                matrix_cell_begin.y + row * matrix_cell_step.height,
+                matrix_cell_size.width,
+                matrix_cell_size.height
+            );
+            const cv::Mat cell = image(cell_rect);
 
             cv::Mat bitwise_not;
             cv::bitwise_not(cell, bitwise_not);
@@ -35,24 +51,38 @@ matrix_type parse_matrix(cv::text::OCRTesseract & ocr, const parse_input & input
     return matrix;
 }
 
-sequences_type parse_sequences(cv::text::OCRTesseract & ocr, const parse_input & input) {
-    sequences_type sequences(input.sequence_lengths.size());
+sequences_type parse_sequences(cv::text::OCRTesseract & ocr, cv::Mat image, matrix_length_type matrix_length, sequence_lengths_type sequence_lengths) {
+    sequences_type sequences(sequence_lengths.size());
 
-    const cv::Size size(32, 32);
-    const cv::Size padding(10, 39);
+    // The position of the matrix right border
+    const int matrix_border_right = matrix_margin_bottomright.width + matrix_border_topcenter.x + (matrix_length * matrix_cell_size.width) / 2;
 
-    const cv::Point begin(680 + (64 / 2) * input.matrix_length, 341);
+    // The position of the sequences left border
+    const int sequences_border_left = matrix_border_right + sequences_border_matrix_left_offset;
 
-    for (int row = 0; row != input.sequence_lengths.size(); ++row) {
-        sequences[row].resize(input.sequence_lengths[row]);
-        for(int col = 0; col != input.sequence_lengths[row]; ++col) {
-            const cv::Rect rect(
-                begin.x + col * (size.width + padding.width),
-                begin.y + row * (size.height + padding.height),
-                size.width,
-                size.height
+    // The coordinate of the first cell
+    const cv::Point sequence_cell_begin(
+        sequences_border_left + sequences_margin_topleft.width,
+        sequences_border_top + sequences_margin_topleft.height
+    );
+
+    // The vector between the first cell and the ith + 1 cell
+    const cv::Size sequence_cell_step(
+        sequence_cell_size.width + sequence_cell_padding.width,
+        sequence_cell_size.height + sequence_cell_padding.height
+    );
+
+    // For each known cell in the row
+    for (int row = 0; row != sequence_lengths.size(); ++row) {
+        sequences[row].resize(sequence_lengths[row]);
+        for(int col = 0; col != sequence_lengths[row]; ++col) {
+            const cv::Rect cell_rect(
+                sequence_cell_begin.x + col * sequence_cell_step.width,
+                sequence_cell_begin.y + row * sequence_cell_step.height,
+                sequence_cell_size.width,
+                sequence_cell_size.height
             );
-            cv::Mat cell = input.image(rect);
+            const cv::Mat cell = image(cell_rect);
 
             cv::Mat bitwise_not;
             cv::bitwise_not(cell, bitwise_not);
@@ -73,10 +103,10 @@ sequences_type parse_sequences(cv::text::OCRTesseract & ocr, const parse_input &
     return sequences;
 }
 
-parse_output parse(const parse_input & input) {
+parsed_type parse(cv::Mat image, matrix_length_type matrix_length, sequence_lengths_type sequence_lengths) {
     const auto ocr = cv::text::OCRTesseract::create(NULL, "Latin", "0123456789ABCDEF", cv::text::OEM_DEFAULT, cv::text::PSM_SINGLE_BLOCK);
-    return parse_output {
-        parse_matrix(*ocr, input),
-        parse_sequences(*ocr, input)
+    return parsed_type {
+        parse_matrix(*ocr, image, matrix_length),
+        parse_sequences(*ocr, image, matrix_length, sequence_lengths)
     };
 }

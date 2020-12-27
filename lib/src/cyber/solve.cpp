@@ -152,8 +152,6 @@ void solve(
         }
     }
 
-    std::cout << "Buffer:\n" << buffer << '\n';
-
     std::cout << "Matrix:\n";
     for (std::size_t r = 0; r < matrix.shape()[0]; ++r) {
         for (std::size_t c = 0; c < matrix.shape()[1]; ++c) {
@@ -165,6 +163,8 @@ void solve(
         }
         std::cout <<  '\n';
     }
+
+    std::cout << "Buffer:\n" << buffer << '\n';
 
     std::cout << "Sequences:" << '\n';
     for (auto sequence = sequences.begin(); sequence != sequences.end(); ++sequence) {

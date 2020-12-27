@@ -9,71 +9,19 @@
 #include <cyber/capture.hpp>
 #endif
 #include <cyber/common.hpp>
+#include <cyber/detect.hpp>
 #include <cyber/parse.hpp>
 #include <cyber/solve.hpp>
 
-void wip() {
-/*
- *   cv::Rect center(begin_x, begin_y, end_x - begin_x, end_y - begin_y);
- *   cv::Mat cropped = image(center);
- *
- *   cv::Mat cropped_hsv;
- *   cvtColor(cropped, cropped_hsv, cv::COLOR_BGR2HSV);
- *
- *   cv::Mat matrix_cursor;
- *   cv::inRange(cropped_hsv, cv::Scalar(105,10,10), cv::Scalar(120,90,90), matrix_cursor);
- *
- *   cv::Mat sequence_cursor;
- *   cv::inRange(cropped_hsv, cv::Scalar(120,0,0), cv::Scalar(125,255,255), sequence_cursor);
- *
- *   cv::Mat installed_mask;
- *   cv::inRange(cropped_hsv, cv::Scalar(60,100,100), cv::Scalar(90,255,255), installed_mask);
- *
- *   cv::Mat cursor_mask;
- *   cv::inRange(cropped_hsv, cv::Scalar(80,100,100), cv::Scalar(100,255,255), cursor_mask);
- *
- *   cv::Mat gray;
- *   cv::cvtColor(cropped, gray, cv::COLOR_BGR2GRAY);
- *
- *   cv::Mat threshold;
- *   cv::threshold(gray, threshold, 100, 255, cv::THRESH_BINARY);
- *
- *   cv::Mat masked;
- *   threshold.copyTo(masked);
- *   masked.setTo(cv::Scalar(0,0,0),installed_mask);
- *   masked.setTo(cv::Scalar(0,0,0),cursor_mask);
- *
- *   cv::Mat blurred;
- *   cv::GaussianBlur(gray, blurred, {5, 5}, 0);
- *
- *   cv::Mat contours;
- *   cv::findContours(blurred, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
- *
- *   cv::Mat edged;
- *   cv::Canny(blurred, edged, 50, 200);
- */
-}
-
 void help(std::string_view name) {
     std::cerr
-    << "Usage: " << name << " [-h] [--path PATH] [--buffer_length BUFFER_LENGTH] [--matrix_length MATRIX_LENGTH] [--sequence_length SEQUENCE_LENGTHS]\n"
+    << "Usage: " << name << " [-h] [--path PATH]\n"
         << '\n'
         << "Cyberpunk 2077 - Breach Solver\n"
-        << '\n'
-        << "positional arguments:\n"
         << "  \n"
         << "optional arguments:\n"
         << "  -h, --help            show this help message and exit\n"
         << "  --path PATH, -p PATH  input image (default: screen-capture)\n"
-        << "\n"
-        << "  --buffer_length BUFFER_LENGTH, -b BUFFER_LENGTH\n"
-        << "                        buffer length (default: auto-detect)\n"
-        << "\n"
-        << "  --matrix_length MATRIX_LENGTH, -m MATRIX_LENGTH\n"
-        << "                        matrix length (default: auto-detect)\n"
-        << "\n"
-        << "  --sequence_lengths SEQUENCE_LENGTHS, -s SEQUENCE_LENGTHS\n"
-        << "                        sequence lengths (default: auto-detect)\n"
     ;
 }
 
@@ -81,9 +29,6 @@ int main(int argc, char * argv[]) {
     const std::vector<std::string_view> args(argv, argv + argc);
 
     std::optional<std::string> path;
-    std::optional<matrix_length_type> matrix_length;
-    std::optional<sequence_lengths_type> sequence_lengths;
-    std::optional<buffer_length_type> buffer_length;
 
     auto argi = args.begin() + 1;
     for (; argi != args.end(); ++argi) {
@@ -97,55 +42,10 @@ int main(int argc, char * argv[]) {
                 std::cerr << "error: argument --path/-p: expected one argument" << std::endl;
                 return EXIT_FAILURE;
             }
-        } else if (*argi == "--buffer_length" || *argi == "-b") {
-            if (++argi != args.end()) {
-                buffer_length = boost::lexical_cast<buffer_length_type>(*argi);
-            } else {
-                std::cerr << "error: argument --buffer_length/-b: expected one argument" << std::endl;
-                return EXIT_FAILURE;
-            }
-        } else if (*argi == "--matrix_length" || *argi == "-m") {
-            if (++argi != args.end()) {
-                matrix_length = boost::lexical_cast<matrix_length_type>(*argi);
-            } else {
-                std::cerr << "error: argument --matrix_length/-m: expected one argument" << std::endl;
-                return EXIT_FAILURE;
-            }
-        } else if (*argi == "--sequence_lengths" || *argi == "-s") {
-            if (++argi != args.end()) {
-                std::regex regex(",");
-                std::regex_token_iterator<std::string_view::iterator> iter(argi->begin(), argi->end(), regex, -1);
-                std::regex_token_iterator<std::string_view::iterator> end;
-                sequence_lengths = sequence_lengths_type{};
-                for (; iter != end; ++iter) {
-                    sequence_lengths->push_back(boost::lexical_cast<sequence_length_type>(*iter));
-                }
-            } else {
-                std::cerr << "error: argument --sequence_lengths/-s: expected one argument" << std::endl;
-                return EXIT_FAILURE;
-            }
         } else {
             std::cerr << "error: unrecognized argument: " << *argi << std::endl;
             return EXIT_FAILURE;
         }
-    }
-
-    if (!buffer_length) {
-        // TODO: buffer_length autodetect
-        std::cerr << "error: buffer_length autodetect is still WIP" << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    if (!matrix_length) {
-        // TODO: matrix_length autodetect
-        std::cerr << "error: matrix_length autodetect is still WIP" << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    if (!sequence_lengths) {
-        // TODO: sequence_lengths autodetect
-        std::cerr << "error: sequence_lengths autodetect is still WIP" << std::endl;
-        return EXIT_FAILURE;
     }
 
     cv::Mat image;
@@ -169,9 +69,50 @@ int main(int argc, char * argv[]) {
 #endif
     }
 
-    parse_output output = parse(parse_input{image, *matrix_length, *sequence_lengths});
+    const detected_type detected = detect(image);
 
-    solve(output.matrix, output.sequences, *buffer_length);
+    if (!detected.matrix_length) {
+        std::cerr << "error: could not detect matrix_length, aborting" << std::endl;
+        return EXIT_FAILURE;
+    } else {
+        std::cout << "matrix_length = " << *detected.matrix_length << std::endl;
+    }
+    if (!detected.buffer_length) {
+        std::cerr << "error: could not detect buffer_length, aborting" << std::endl;
+        return EXIT_FAILURE;
+    } else {
+        std::cout << "buffer_length = " << *detected.buffer_length << std::endl;
+    }
+    if (!detected.sequence_lengths) {
+        std::cerr << "error: could not detect sequence_lengths, aborting" << std::endl;
+        return EXIT_FAILURE;
+    } else {
+        std::cout << "sequence_lengths = [";
+        std::copy(detected.sequence_lengths->begin(), detected.sequence_lengths->end(), std::ostream_iterator<sequence_length_type>(std::cout, ","));
+        std::cout << ']' << std::endl;
+    }
+
+    const parsed_type parsed = parse(image, *detected.matrix_length, *detected.sequence_lengths);
+
+    for (const auto & line : parsed.matrix) {
+        for (const auto & item : line) {
+            if (!item) {
+                std::cerr << "warning: detected a 00 in matrix, proceeding anyway" << std::endl;
+                break;
+            }
+        }
+    }
+
+    for (const auto & sequence : parsed.sequences) {
+        for (const auto & item : sequence) {
+            if (!item) {
+                std::cerr << "warning: detected a 00 in sequence, proceeding anyway" << std::endl;
+                break;
+            }
+        }
+    }
+
+    solve(parsed.matrix, parsed.sequences, *detected.buffer_length);
 
     return EXIT_SUCCESS;
 }
