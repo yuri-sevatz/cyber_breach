@@ -59,14 +59,20 @@ You can optionally launch cyber_breach on a saved image.  You can also tell cybe
 ### Windows
 
 - Visual Studio 2019 (with "Desktop Development with C++") or Build Tools for Visual Studio 2019 (with "MSVC142")
+- Boost
 - CMake
+- OpenCV
+- OpenCV Contrib
+- TermColor
+- Tesseract
 
 ### Linux
 
-- CMake
 - Boost
+- CMake
 - OpenCV
 - OpenCV Contrib
+- TermColor
 - Tesseract
 
 ## Compiling
@@ -82,8 +88,9 @@ vcpkg install boost:x64-windows opencv:x64-windows opencv[contrib]:x64-windows t
 cd ..
 git clone git@github.com:yuri-sevatz/cyberpunk-cpp.git
 cd cyberpunk-cpp
+git submodule update --init
 mkdir build && cd build
-cmake .. "-DCMAKE_TOOLCHAIN_FILE=C:\src\vcpkg\scripts\buildsystems\vcpkg.cmake"
+cmake .. "-DCMAKE_TOOLCHAIN_FILE=C:\src\vcpkg\scripts\buildsystems\vcpkg.cmake" "-DBUILD_TESTING:BOOL=OFF" "-DCYBER_BUNDLE_TESSDATA:BOOL=ON"
 cmake --build . --config Release
 ```
 
@@ -101,14 +108,6 @@ cmake --build . --config Release
 ```
 
 Resulting binary is stored in ~\cyberpunk-cpp\build\bin\*
-
-## Runtime Dependencies
-
-For the OCR to work, you will also need a copy of the the Tesseract Latin script training data from Google.  This data is already included in all pre-built releases.
-
-https://github.com/tesseract-ocr/tessdata_best/blob/master/script/Latin.traineddata
-
-The training data is used for character recognition of the fixed size hexadecimal characters, in the matrix and sequence boxes.
 
 ### Windows
 
@@ -128,5 +127,4 @@ wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_best/master/script
 
 ## TODO
 
-- Automatically install Latin tessdata with cmake
 - Support Resolutions > 1080P (Need lots of high-quality example images of different screens)
