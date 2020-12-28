@@ -16,23 +16,6 @@ I think the minigame is fun, but I felt it detracts from the mood of the rest of
 
 cyber_breach works by either taking a screenshot of a running game, or importing an image from a file.
 
-To run the OCR, cyber_breach detects:
-
-1. The buffer length
-2. The matrix length
-3. The sequence length(s)
-
-It then performs:
-
-- OCR on the detected boxes
-- Calculates a solution for the puzzle
-- Displays the result on-screen.
-
-The breach protocol must not already be started with any boxes clicked, although pre-INSTALLED sequences are automatically skipped when detected.
-
-The screenshot must also be **DISPLAYED IN 1080P**.  *(I am still working on support for different resolutions!)*
-
-**The screenshot must have nothing covering (A) THE MATRIX BOX, (B) THE BUFFER BOX, or (C) THE SEQUENCE BOX; including THE BLUE CURSOR or ANY WINDOW you used to run the solver**.  Covering any other parts of Breach Protocol oither than the ones listed above is fine.
 
 ```
 Usage: cyber_breach.exe [-h] [--load INPUT] [--save OUTPUT]
@@ -48,6 +31,28 @@ optional arguments:
 
 By default, cyber_breach.exe will take screenshots from a running copy of CP2077
 ```
+
+When you launch cyber_breach, it tries to detect from a running instance of CP2077 (or from a previously saved image):
+
+1. The buffer length
+2. The matrix length
+3. The sequence length(s)
+
+It then performs:
+
+- Optical character recognition on the matrix and sequences
+- Calculates the highest scoring path through the matrix
+- Displays the result on-screen
+
+You can optionally launch cyber_breach on a saved image.  You can also tell cyber_breach to save newly captured screenshots to a directory of your choosing.
+
+## Requirements
+
+- The screenshot must be **FROM A 1080P DISPLAY**.  *(I am still working on support for different resolutions!)*
+
+- The breach **MUST NOT HAVE ALREADY BEEN STARTED** with any boxes clicked, although pre-installed sequences are automatically skipped by the solver if detected.  *(i.e. You'll be good as long as none of the boxes in the matrix have already been clicked)*
+
+- The screenshot must have nothing covering **(A) THE MATRIX BOX**, **(B) THE BUFFER BOX**, or **(C) THE SEQUENCE BOX**; including **THE BLUE CURSOR** or **ANY WINDOW** you used to launch the solver.  Covering any other part of Breach Protocol screen outside of the above exceptions is fine.
 
 ## Build Dependencies
 
@@ -73,7 +78,7 @@ mkdir src && cd src
 git clone git@github.com:microsoft/vcpkg.git
 cd vcpkg
 bootstrap-vcpkg.bat
-vcpkg install boost opencv opencv[contrib] termcolor
+vcpkg install boost:x64-windows opencv:x64-windows opencv[contrib]:x64-windows termcolor:x64-windows
 cd ..
 git clone git@github.com:yuri-sevatz/cyberpunk-cpp.git
 cd cyberpunk-cpp
@@ -99,11 +104,11 @@ Resulting binary is stored in ~\cyberpunk-cpp\build\bin\*
 
 ## Runtime Dependencies
 
-For the OCR to work, you will also need a copy of the the Tesseract Latin script training data from Google:
+For the OCR to work, you will also need a copy of the the Tesseract Latin script training data from Google.  This data is already included in all pre-built releases.
 
 https://github.com/tesseract-ocr/tessdata_best/blob/master/script/Latin.traineddata
 
-This data is used for character recognition of the fixed size hexadecimal characters, in the matrix and sequence boxes.
+The training data is used for character recognition of the fixed size hexadecimal characters, in the matrix and sequence boxes.
 
 ### Windows
 
@@ -123,5 +128,5 @@ wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_best/master/script
 
 ## TODO
 
-- Automatically install Latin tessdata
+- Automatically install Latin tessdata with cmake
 - Support Resolutions > 1080P (Need lots of high-quality example images of different screens)
