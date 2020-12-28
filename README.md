@@ -35,13 +35,18 @@ The screenshot must also be **DISPLAYED IN 1080P**.  *(I am still working on sup
 **The screenshot must have nothing covering (A) THE MATRIX BOX, (B) THE BUFFER BOX, or (C) THE SEQUENCE BOX; including THE BLUE CURSOR or ANY WINDOW you used to run the solver**.  Covering any other parts of Breach Protocol oither than the ones listed above is fine.
 
 ```
-Usage: ./cyber_breach [-h] [--path PATH]
+Usage: cyber_breach.exe [-h] [--load INPUT] [--save OUTPUT]
 
 Cyberpunk 2077 - Breach Solver
-
+  
 optional arguments:
   -h, --help            show this help message and exit
-  --path PATH, -p PATH  input image (default: screen-capture)
+  --load INPUT, -l INPUT
+                        input image to load screenshot (default: screenshot)
+  --save OUTPUT, -s OUTPUT
+                        output dir to save screenshot (default: disabled)
+
+By default, cyber_breach.exe will take screenshots from a running copy of CP2077
 ```
 
 ## Build Dependencies
