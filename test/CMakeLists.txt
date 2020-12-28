@@ -5,8 +5,6 @@ project(cyber_test)
 find_package(Boost REQUIRED COMPONENTS graph)
 find_package(OpenCV REQUIRED COMPONENTS core dnn imgcodecs imgproc ml text)
 
-option(RUN_TESTING "Run the testing tree." OFF)
-
 set(Boost_USE_MULTITHREADED ON)
 
 include_directories(${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
@@ -35,7 +33,15 @@ foreach(example_image ${${PROJECT_NAME}_example_images})
     )
 endforeach(example_image)
 
-if (RUN_TESTING)
+if(CYBER_BUNDLE_TESSDATA)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/modules/tessdata_best/script/Latin.traineddata"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/tessdata/Latin.traineddata"
+    )
+endif(CYBER_BUNDLE_TESSDATA)
+
+if(RUN_TESTING)
     add_custom_command(
         TARGET ${PROJECT_NAME}
         POST_BUILD

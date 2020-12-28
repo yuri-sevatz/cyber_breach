@@ -19,4 +19,12 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${OpenCV_LIBS} cyber)
 
+if(CYBER_BUNDLE_TESSDATA)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/modules/tessdata_best/script/Latin.traineddata"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/tessdata/Latin.traineddata"
+    )
+endif(CYBER_BUNDLE_TESSDATA)
+
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
