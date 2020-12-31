@@ -109,22 +109,6 @@ cmake --build . --config Release
 
 Resulting binary is stored in ~\cyberpunk-cpp\build\bin\*
 
-### Windows
-
-```
-cd C:\src\cyberpunk-cpp\build\bin\Release
-mkdir tessdata && cd tessdata
-curl -o Latin.traineddata https://raw.githubusercontent.com/tesseract-ocr/tessdata_best/master/script/Latin.traineddata
-```
-
-### Linux
-
-```
-cd ~/cyberpunk-cpp/build/bin
-mkdir tessdata; cd tessdata
-wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_best/master/script/Latin.traineddata
-```
-
 ## TODO
 
 - Support Resolutions > 1080P (Need lots of high-quality example images of different screens)
