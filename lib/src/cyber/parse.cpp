@@ -1,4 +1,10 @@
+#ifdef _WIN32
+#include <io.h>
+#endif
+
 #include <algorithm>
+#include <cstdlib>
+#include <cstdio>
 
 #include <boost/algorithm/hex.hpp>
 
@@ -6,6 +12,8 @@
 
 #include <cyber/layout.hpp>
 #include <cyber/parse.hpp>
+
+namespace {
 
 matrix_type parse_matrix(cv::text::OCRTesseract & ocr, cv::Mat image, matrix_length_type matrix_length) {
     matrix_type matrix(boost::extents[matrix_length][matrix_length]);
@@ -89,6 +97,7 @@ sequences_type parse_sequences(cv::text::OCRTesseract & ocr, cv::Mat image, matr
 
             std::string output_text;
             ocr.run(bitwise_not, output_text);
+
             output_text.erase(std::remove_if(output_text.begin(), output_text.end(), [](char x){return std::isspace(x);}), output_text.end());
 
             if (output_text.size() % 2 == 0) {
@@ -103,10 +112,30 @@ sequences_type parse_sequences(cv::text::OCRTesseract & ocr, cv::Mat image, matr
     return sequences;
 }
 
+} // namespace
+
 parsed_type parse(cv::Mat image, matrix_length_type matrix_length, sequence_lengths_type sequence_lengths) {
-    const auto ocr = cv::text::OCRTesseract::create(NULL, "Latin", "0123456789ABCDEF", cv::text::OEM_DEFAULT, cv::text::PSM_SINGLE_BLOCK);
-    return parsed_type {
+    const int old = ::dup(2);
+    FILE * file;
+#ifdef _WIN32
+    ::fopen_s(&file, "nul", "w");
+#else
+    file = ::fopen("/dev/null", "w");
+#endif
+    ::dup2(::fileno(file), 2);
+
+    auto ocr = cv::text::OCRTesseract::create(NULL, "Latin", "0123456789ABCDEF", cv::text::OEM_DEFAULT, cv::text::PSM_SINGLE_BLOCK);
+
+    const parsed_type result {
         parse_matrix(*ocr, image, matrix_length),
         parse_sequences(*ocr, image, matrix_length, sequence_lengths)
     };
+
+    ocr.reset();
+
+    ::fflush(stderr);
+    ::fclose(file);
+    ::dup2(old, 2);
+
+    return result;
 }
