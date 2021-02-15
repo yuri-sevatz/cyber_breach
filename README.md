@@ -10,7 +10,7 @@ I think the minigame is fun, but I felt it detracts from the explosive ascension
 
 (+ I hate Sudokus, and all brute-force problems :P)
 
-![Screenshot](/SCREENSHOT.png?raw=true "Optional Title")
+![Preview](/PREVIEW.apng?raw=true "Animated Preview")
 
 ## Usage
 
