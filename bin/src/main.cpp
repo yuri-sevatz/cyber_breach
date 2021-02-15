@@ -25,23 +25,62 @@
 constexpr const char * const window_name = "Cyberpunk 2077 (C) 2020 by CD Projekt RED";
 
 void help(std::string_view name) {
-    std::cout
-    << "Usage: " << name << " [-h] [--load INPUT] [--save OUTPUT]\n"
-        << '\n'
-        << "Cyberpunk 2077 - Breach Protocol Auto-Solver\n"
-        << "  \n"
-        << "optional arguments:\n"
-        << "  -h, --help            show this help message and exit\n"
-        << "  --load INPUT, -l INPUT\n"
-        << "                        input image to load screenshot (default: screenshot)\n"
+    std::cout << "Usage: ";
+
+    const std::array<std::ostream &(*)(std::ostream&),7> colors({
+        term::bright_red,
+        term::bright_green,
+        term::bright_yellow,
+        term::bright_blue,
+        term::bright_magenta,
+        term::bright_cyan,
+        term::bright_white,
+    });
+    /*
+    auto color = colors.begin();
+    for (auto ch : name) {
+        if (color == colors.end()) {
+            color = colors.begin();
+        }
+        std::cout << *color++ << ch << term::reset;
+    }
+    */
+    std::cout << term::bright_cyan << term::underline << term::bold << name << term::reset;
+    std::cout<< ' '
+        << term::magenta << "[-h]" << term::reset << ' '
+        << term::red << "[-l INPUT]" << term::reset << ' '
 #ifdef _WIN32
-        << "  --save OUTPUT, -s OUTPUT\n"
-        << "                        output dir to save screenshot (default: disabled)\n"
-        << "  --no-autoclick\n"
-        << "                        disables auto-clicking (default: autoclick, iff screenshot)\n"
+        << term::yellow << "[-s OUTPUT]" << term::reset << ' '
+        << term::green << "[--no-autoclick]" << term::reset << ' '
 #endif
-        << "\n"
-        << "By default, " << name << " will take screenshots and autoclick a running copy of CP2077\n";
+        << "\n\n"
+        << term::bright_yellow << term::reverse << term::bold << "Cyberpunk 2077" << term::reset << " - "
+        << term::bold << "Breach Protocol Auto-Solver" << term::reset << '\n'
+        << '\n'
+        << "optional arguments:\n"
+        << "  "
+        << term::magenta << "-h" << term::reset << ", " << term::magenta << "--help" << term::reset
+        << "            "
+        << "show this help message and exit" << '\n'
+        << "  "
+        << term::red << "--load INPUT" << term::reset << ", " << term::red << "-l INPUT" << term::reset << '\n'
+        << "                        "
+        << "input file to load screenshot" << ' '
+        << '(' << "default:" << ' ' << term::underline << "capture" << term::reset << ')' << '\n'
+#ifdef _WIN32
+        << "  "
+        << term::yellow << "--save OUTPUT" << term::reset << ", " << term::yellow << "-s OUTPUT" << term::reset << '\n'
+        << "                        "
+        << "output directory to save screenshot" << ' '
+        << '(' << "default:" << ' ' << term::underline << "disabled" << term::reset << ')' << '\n'
+        << "  "
+        << term::green << "--no-autoclick" << term::reset << '\n'
+        << "                        "
+        << "turn off auto-clicking" << ' '
+        << '(' << "default:" << ' ' << term::underline << "autoclick" << term::reset << ", iff capture" << ')' << '\n'
+#endif
+        << '\n'
+        << "By default " << name << " will capture and auto-click a running copy of CP2077\n";
     ;
 }
 
@@ -256,7 +295,7 @@ int main(int argc, char * argv[]) {
 
     std::cout
         << "Score:\n"
-        << solved.score << '/' << ((1 << parsed.sequences.size()) - 1) << "\n"
+        << solved.score << '/' << ((1 << parsed.sequences.size()) - 1) << '\n'
     ;
 
     if (!matrix_good) {
