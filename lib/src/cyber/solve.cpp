@@ -1,24 +1,14 @@
 #include <algorithm>
-#include <iomanip>
-#include <iostream>
 
 #include <boost/graph/adjacency_list.hpp>
 
 #include <cyber/solve.hpp>
 #include <cyber/term.hpp>
 
+namespace {
+
 struct vertex_info {
-    unsigned char value;
-
-    friend std::ostream & operator<<(std::ostream & os, const vertex_info & info) {
-        boost::io::ios_base_all_saver _(os);
-        return os << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << (int) info.value;
-    }
-
-    friend std::istream & operator<<(std::istream & is, vertex_info & info) {
-        boost::io::ios_base_all_saver _(is);
-        return is >> std::hex >> info.value;
-    }
+    position_type position;
 };
 
 struct edge_info {
@@ -38,7 +28,6 @@ using Graph = boost::adjacency_list<
 >;
 using Traits = boost::graph_traits<Graph>;
 
-
 using vertex_index_type = boost::property_map<Graph, boost::vertex_index_t>::type;
 using edge_index_type = boost::property_map<Graph, boost::edge_index_t>::type;
 using search_index_type = boost::property_map<Graph, boost::vertex_index_t>::type;
@@ -49,25 +38,26 @@ using search_props_type = boost::vector_property_map<search_info, vertex_index_t
 
 void traverse(
     const Graph & graph,
+    const matrix_type & matrix,
     const std::vector<std::vector<unsigned char>> & sequences,
     vertex_props_type & vertex_props,
     edge_props_type & edge_props,
     search_props_type & search_props,
     Traits::vertex_descriptor src_vertex_descriptor,
     edge_info src_edge_info,
-    std::size_t distance,
-    std::size_t & high_score,
+    buffer_length_type distance,
+    score_type & high_score,
     std::vector<Traits::vertex_descriptor> & path,
     std::vector<Traits::vertex_descriptor> & result
 ) {
     path.push_back(src_vertex_descriptor);
     put(search_props, src_vertex_descriptor, search_info{true});
-    std::size_t score = 0;
+    score_type score = 0;
 
     for (auto sequence = sequences.begin(); sequence != sequences.end(); ++sequence) {
         if (std::search(path.begin(), path.end(), sequence->begin(), sequence->end(),
-            [&vertex_props](Traits::vertex_descriptor vertex, unsigned char rhs){
-                return get(vertex_props, vertex).value == rhs;
+            [&matrix,&vertex_props](Traits::vertex_descriptor vertex, unsigned char rhs){
+                return matrix(get(vertex_props, vertex).position) == rhs;
             }
         ) != path.end()) {
             score += (1 << (std::distance(sequences.begin(), sequence)));
@@ -84,7 +74,7 @@ void traverse(
             const Traits::vertex_descriptor dst_vertex_descriptor = target(*edge, graph);
             if (dst_edge_info.dimension != src_edge_info.dimension && !get(search_props, dst_vertex_descriptor).skip) {
                 traverse(
-                    graph, sequences,
+                    graph, matrix, sequences,
                     vertex_props, edge_props, search_props,
                     dst_vertex_descriptor, dst_edge_info,
                     distance - 1,
@@ -98,10 +88,12 @@ void traverse(
     path.pop_back();
 }
 
-void solve(
+} // namespace
+
+solved_type solve(
     const matrix_type & matrix,
     const sequences_type & sequences,
-    const std::size_t buffer
+    const buffer_length_type buffer
 ) {
     Graph graph(matrix.shape()[0] * matrix.shape()[1]);
 
@@ -117,7 +109,9 @@ void solve(
     // Store vertex values
     for (std::size_t r = 0; r < matrix.shape()[0]; ++r) {
         for (std::size_t c = 0; c < matrix.shape()[1]; ++c) {
-            put(vertex_props, Traits::vertex_descriptor{r * matrix.shape()[1] + c}, vertex_info{matrix[r][c]});
+            // NOTE: For whatever insane reason, multi_array::index uses SIGNED indices.
+            vertex_info info{{static_cast<position_type::value_type>(r), static_cast<position_type::value_type>(c)}};
+            put(vertex_props, Traits::vertex_descriptor{r * matrix.shape()[1] + c}, info);
         }
     }
 
@@ -153,45 +147,13 @@ void solve(
         }
     }
 
-    std::cout
-        << "Matrix:\n"
-        << term::high_red
-    ;
-    for (std::size_t r = 0; r < matrix.shape()[0]; ++r) {
-        for (std::size_t c = 0; c < matrix.shape()[1]; ++c) {
-            const Traits::vertex_descriptor vertex{r * matrix.shape()[1] + c};
-            std::cout << get(vertex_props, Traits::vertex_descriptor{vertex});
-            if (c != matrix.shape()[1] - 1) {
-                std::cout << ' ';
-            }
-        }
-        std::cout <<  '\n';
-    }
-    std::cout << term::reset;
-
-    std::cout
-        << "Buffer:\n"
-        << term::high_yellow << buffer << term::reset << '\n';
-
-    std::cout
-        << "Sequences:\n"
-        << term::high_cyan
-    ;
-    for (auto sequence = sequences.begin(); sequence != sequences.end(); ++sequence) {
-        boost::io::ios_base_all_saver _(std::cout);
-        std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase;
-        std::copy(sequence->begin(), sequence->end(), std::ostream_iterator<int>(std::cout, " "));
-        std::cout << '\n';
-    }
-    std::cout << term::reset;
-
     std::vector<Traits::vertex_descriptor> result;
     std::vector<Traits::vertex_descriptor> path;
-    std::size_t high_score = 0;
+    score_type high_score = 0;
     for (std::size_t c = 0; c < matrix.shape()[1]; ++c) {
         const Traits::vertex_descriptor vertex{c};
         traverse(
-            graph, sequences,
+            graph, matrix, sequences,
             vertex_props, edge_props, search_props,
             vertex, edge_info{0},
             buffer - 1,
@@ -200,44 +162,14 @@ void solve(
         );
     }
 
-    std::cout
-        << "Path:\n"
-        << term::high_magenta
-    ;
-    for (auto vertex = result.begin(); vertex != result.end(); ++vertex) {
-        std::cout << get(vertex_props, *vertex);
-        if (vertex + 1 != result.end()) {
-            std::cout << ' ';
-        }
-    }
-    std::cout
-        << term::reset
-        << '\n'
-    ;
-
-    std::cout
-        << "Solution:\n"
-        << term::high_green
-    ;
-    for (std::size_t r = 0; r < matrix.shape()[0]; ++r) {
-        for (std::size_t c = 0; c < matrix.shape()[1]; ++c) {
-            const Traits::vertex_descriptor vertex{r * matrix.shape()[1] + c};
-            const auto step = std::find(result.begin(), result.end(), vertex);
-            if (step == result.end()) {
-                std::cout << "--";
-            } else {
-                std::cout << std::setw(2) << std::distance(result.begin(), step);
-            }
-            if (c != matrix.shape()[1] - 1) {
-                std::cout << ' ';
-            }
-        }
-        std::cout << '\n';
-    }
-    std::cout << term::reset;
-
-    std::cout
-        << "Score:\n"
-        << high_score << '/' << ((1 << sequences.size()) - 1) << "\n"
-    ;
+    return solved_type {
+        [&matrix,&vertex_props,&result](){
+            path_type path;
+            std::transform(result.begin(), result.end(), std::back_insert_iterator(path), [&matrix,&vertex_props](const Traits::vertex_descriptor & vertex){
+                return get(vertex_props, vertex).position;
+            });
+            return path;
+        }(),
+        high_score
+    };
 }

@@ -1,4 +1,5 @@
 #include <cyber/capture.hpp>
+#include <cyber/mouse.hpp>
 
 #include <iostream>
 #include <vector>
@@ -117,13 +118,38 @@ cv::Mat captureScreenMat(HWND hwnd) {
 
 cv::Mat capture(const char * name) {
     HWND hwnd = FindWindowA(NULL, name);
-    if (hwnd) {
-        cv::Mat src = captureScreenMat(hwnd);
-        if (!src.empty()) {
-            cv::Mat dst;
-            cv::cvtColor(src, dst, cv::COLOR_BGRA2BGR);
-            return dst;
+    if (!hwnd) {
+        std::cerr << "FindWindowA returned NULL" << std::endl;
+        return cv::Mat();
+    }
+
+    if (!SetForegroundWindow(hwnd)) {
+        std::cerr << "SetForegroundWindow returned NULL" << std::endl;
+        return cv::Mat();
+    }
+
+    const std::chrono::seconds wait(5);
+    const std::chrono::high_resolution_clock::duration poll = std::chrono::milliseconds(100);
+    const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+    const std::chrono::high_resolution_clock::time_point finish = start + wait;
+    while (GetForegroundWindow() != hwnd) {
+        if (finish < std::chrono::high_resolution_clock::now()) {
+            std::cerr << "GetForegroundWindow failed after " << wait.count() << " seconds" << std::endl;
+            return cv::Mat();
+        } else {
+            std::this_thread::sleep_for(poll);
         }
     }
-    return cv::Mat();
+
+    mouse_move(cv::Point(-65535,-65535));
+    std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::seconds(1)) / 10 /* FPS */);
+
+    cv::Mat src = captureScreenMat(hwnd);
+    if (src.empty()) {
+        return cv::Mat();
+    }
+
+    cv::Mat dst;
+    cv::cvtColor(src, dst, cv::COLOR_BGRA2BGR);
+    return dst;
 }

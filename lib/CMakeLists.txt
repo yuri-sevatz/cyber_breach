@@ -28,10 +28,14 @@ set(${PROJECT_NAME}_sources
 if(WIN32)
     list(APPEND ${PROJECT_NAME}_headers
         include/cyber/capture.hpp
+        include/cyber/clicker.hpp
+        include/cyber/mouse.hpp
         include/cyber/init.hpp
     )
     list(APPEND ${PROJECT_NAME}_sources
         src/cyber/capture.cpp
+        src/cyber/clicker.cpp
+        src/cyber/mouse.cpp
         src/cyber/init.cpp
     )
 endif(WIN32)
