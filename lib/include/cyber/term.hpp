@@ -17,7 +17,7 @@ namespace term {
     using namespace termcolor;
 
     inline
-    std::ostream& high_grey(std::ostream& stream)
+    std::ostream& bright_grey(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -33,7 +33,7 @@ namespace term {
     }
 
     inline
-    std::ostream& high_red(std::ostream& stream)
+    std::ostream& bright_red(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -49,7 +49,7 @@ namespace term {
     }
 
     inline
-    std::ostream& high_green(std::ostream& stream)
+    std::ostream& bright_green(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -65,7 +65,7 @@ namespace term {
     }
 
     inline
-    std::ostream& high_yellow(std::ostream& stream)
+    std::ostream& bright_yellow(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -81,7 +81,7 @@ namespace term {
     }
 
     inline
-    std::ostream& high_blue(std::ostream& stream)
+    std::ostream& bright_blue(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -97,7 +97,7 @@ namespace term {
     }
 
     inline
-    std::ostream& high_magenta(std::ostream& stream)
+    std::ostream& bright_magenta(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -113,7 +113,7 @@ namespace term {
     }
 
     inline
-    std::ostream& high_cyan(std::ostream& stream)
+    std::ostream& bright_cyan(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -129,7 +129,7 @@ namespace term {
     }
 
     inline
-    std::ostream& high_white(std::ostream& stream)
+    std::ostream& bright_white(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -147,7 +147,7 @@ namespace term {
 
 
     inline
-    std::ostream& on_high_grey(std::ostream& stream)
+    std::ostream& on_bright_grey(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -163,7 +163,7 @@ namespace term {
     }
 
     inline
-    std::ostream& on_high_red(std::ostream& stream)
+    std::ostream& on_bright_red(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -179,7 +179,7 @@ namespace term {
     }
 
     inline
-    std::ostream& on_high_green(std::ostream& stream)
+    std::ostream& on_bright_green(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -195,7 +195,7 @@ namespace term {
     }
 
     inline
-    std::ostream& on_high_yellow(std::ostream& stream)
+    std::ostream& on_bright_yellow(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -211,7 +211,7 @@ namespace term {
     }
 
     inline
-    std::ostream& on_high_blue(std::ostream& stream)
+    std::ostream& on_bright_blue(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -227,7 +227,7 @@ namespace term {
     }
 
     inline
-    std::ostream& on_high_magenta(std::ostream& stream)
+    std::ostream& on_bright_magenta(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -243,7 +243,7 @@ namespace term {
     }
 
     inline
-    std::ostream& on_high_cyan(std::ostream& stream)
+    std::ostream& on_bright_cyan(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {
@@ -259,7 +259,7 @@ namespace term {
     }
 
     inline
-    std::ostream& on_high_white(std::ostream& stream)
+    std::ostream& on_bright_white(std::ostream& stream)
     {
         if (_internal::is_colorized(stream))
         {

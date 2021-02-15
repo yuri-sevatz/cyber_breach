@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <iomanip>
 #include <ostream>
@@ -20,6 +21,11 @@ using sequence_length_type = std::size_t;
 using sequence_lengths_type = std::vector<sequence_length_type>;
 
 using buffer_length_type = std::size_t;
+
+using position_type = std::array<matrix_type::index,2>;
+using path_type = std::vector<position_type>;
+
+using score_type = std::size_t;
 
 inline std::ostream & operator<<(std::ostream & os, const sequences_type & sequences) {
     os << "{\n";
@@ -62,6 +68,3 @@ inline std::ostream & operator<<(std::ostream & os, const matrix_type & matrix) 
     os << '}';
     return os;
 }
-
-
-

@@ -11,6 +11,7 @@
 
 #ifdef _WIN32
 #include <cyber/capture.hpp>
+#include <cyber/clicker.hpp>
 #endif
 #include <cyber/common.hpp>
 #include <cyber/detect.hpp>
@@ -20,6 +21,8 @@
 #include <cyber/parse.hpp>
 #include <cyber/solve.hpp>
 #include <cyber/term.hpp>
+
+constexpr const char * const window_name = "Cyberpunk 2077 (C) 2020 by CD Projekt RED";
 
 void help(std::string_view name) {
     std::cout
@@ -31,8 +34,12 @@ void help(std::string_view name) {
         << "  -h, --help            show this help message and exit\n"
         << "  --load INPUT, -l INPUT\n"
         << "                        input image to load screenshot (default: screenshot)\n"
+#ifdef _WIN32
         << "  --save OUTPUT, -s OUTPUT\n"
         << "                        output dir to save screenshot (default: disabled)\n"
+        << "  --no-autoclick\n"
+        << "                        disables auto-clicking (default: autoclick, iff screenshot)\n"
+#endif
         << "\n"
         << "By default, " << name << " will take screenshots from a running copy of CP2077\n";
     ;
@@ -49,6 +56,8 @@ int main(int argc, char * argv[]) {
 #ifdef _WIN32
     std::optional<std::filesystem::path> save;
 #endif
+
+    bool no_autoclick = false;
 
     auto argi = args.begin() + 1;
     for (; argi != args.end(); ++argi) {
@@ -70,6 +79,8 @@ int main(int argc, char * argv[]) {
                 std::cerr << term::red << "error: " << term::reset << "argument --save/-s: expected one argument" << std::endl;
                 return EXIT_FAILURE;
             }
+        } else if (*argi == "--no-autoclick") {
+            no_autoclick = true;
 #endif
         } else {
             std::cerr << term::red << "error: " << term::reset << "unrecognized argument: " << *argi << std::endl;
@@ -87,7 +98,7 @@ int main(int argc, char * argv[]) {
         }
     } else {
 #ifdef _WIN32
-        image = capture("Cyberpunk 2077 (C) 2020 by CD Projekt RED");
+        image = capture(window_name);
         if (image.empty()) {
             std::cerr << term::red << "error: " << term::reset << "could not capture screenshot, aborting" << std::endl;
             return EXIT_FAILURE;
@@ -116,7 +127,7 @@ int main(int argc, char * argv[]) {
     } else {
         std::cout
             << " matrix_length = "
-            << term::high_red << *detected.matrix_length << term::reset
+            << term::bright_red << *detected.matrix_length << term::reset
             << std::endl
         ;
     }
@@ -126,7 +137,7 @@ int main(int argc, char * argv[]) {
     } else {
         std::cout
             << " buffer_length = "
-            << term::high_yellow << *detected.buffer_length << term::reset
+            << term::bright_yellow << *detected.buffer_length << term::reset
             << std::endl
         ;
     }
@@ -137,9 +148,9 @@ int main(int argc, char * argv[]) {
         std::cout << " sequence_lengths = [";
         if (!detected.sequence_lengths->empty()) {
             auto sequence = detected.sequence_lengths->begin();
-            std::cout << term::high_cyan << *sequence << term::reset;
+            std::cout << term::bright_cyan << *sequence << term::reset;
             while (++sequence != detected.sequence_lengths->end()) {
-                std::cout << ',' << term::high_cyan << *sequence << term::reset;
+                std::cout << ',' << term::bright_cyan << *sequence << term::reset;
             }
         }
         std::cout << ']' << std::endl;
@@ -147,36 +158,133 @@ int main(int argc, char * argv[]) {
 
     const parsed_type parsed = parse(image, *detected.matrix_length, *detected.sequence_lengths);
 
-    solve(parsed.matrix, parsed.sequences, *detected.buffer_length);
+    std::cout
+        << "Matrix:\n"
+        << term::bright_red
+    ;
+    for (std::size_t r = 0; r < parsed.matrix.shape()[0]; ++r) {
+        for (std::size_t c = 0; c < parsed.matrix.shape()[1]; ++c) {
+            boost::io::ios_base_all_saver _(std::cout);
+            std::cout << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << (int) parsed.matrix[r][c];
+            if (c != parsed.matrix.shape()[1] - 1) {
+                std::cout << ' ';
+            }
+        }
+        std::cout <<  '\n';
+    }
+    std::cout << term::reset;
 
-    static const std::unordered_set<byte_type> expected = {0x1C, 0x55, 0x7A, 0xBD, 0xE9};
+    std::cout
+        << "Buffer:\n"
+        << term::bright_yellow << *detected.buffer_length << term::reset << '\n';
 
+    std::cout
+        << "Sequences:\n"
+        << term::bright_cyan
+    ;
+    for (auto sequence = parsed.sequences.begin(); sequence != parsed.sequences.end(); ++sequence) {
+        boost::io::ios_base_all_saver _(std::cout);
+        std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase;
+        std::copy(sequence->begin(), sequence->end(), std::ostream_iterator<int>(std::cout, " "));
+        std::cout << '\n';
+    }
+    std::cout << term::reset;
+
+    const std::unordered_set<byte_type> expected = {0x1C, 0x55, 0x7A, 0xBD, 0xE9};
+
+    bool matrix_good = true;
     for (const auto & line : parsed.matrix) {
         for (const auto & item : line) {
             if (expected.find(item) == expected.end()) {
-                std::cout
-                    << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
-                    << term::red << term::on_yellow << "|==WARNING==|" << term::reset
-                    << " Detected unexpected values in " << term::high_red << "matrix" << term::reset << ", result may be sub-optimal" << '\n'
-                    << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
-                ;
-                break;
-            }
-        }
-    }
-    for (const auto & sequence : parsed.sequences) {
-        for (const auto & item : sequence) {
-            if (expected.find(item) == expected.end()) {
-                std::cout
-                    << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
-                    << term::red << term::on_yellow << "|==WARNING==|" << term::reset
-                    << " Detected unexpected values in " << term::high_cyan << "sequence" << term::reset << ", result may be sub-optimal" << '\n'
-                    << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
-                ;
+                matrix_good = false;
                 break;
             }
         }
     }
 
+    bool sequence_good = true;
+    for (const auto & sequence : parsed.sequences) {
+        for (const auto & item : sequence) {
+            if (expected.find(item) == expected.end()) {
+                sequence_good = false;
+                break;
+            }
+        }
+    }
+
+    const solved_type solved = solve(parsed.matrix, parsed.sequences, *detected.buffer_length);
+
+    std::cout
+        << "Path:\n"
+        << term::bright_magenta
+    ;
+    for (auto step = solved.path.begin(); step != solved.path.end(); ++step) {
+        boost::io::ios_base_all_saver _(std::cout);
+        const position_type position{
+            static_cast<matrix_type::index>((*step)[0]),
+            static_cast<matrix_type::index>((*step)[1])
+        };
+        std::cout << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << (int) parsed.matrix(position);
+        if (step + 1 != solved.path.end()) {
+            std::cout << ' ';
+        }
+    }
+    std::cout
+        << term::reset
+        << '\n'
+    ;
+
+    std::cout
+        << "Solution:\n"
+        << term::bright_green
+    ;
+    for (std::size_t r = 0; r < parsed.matrix.shape()[0]; ++r) {
+        for (std::size_t c = 0; c < parsed.matrix.shape()[1]; ++c) {
+            const auto step = std::find(solved.path.begin(), solved.path.end(), position_type{static_cast<matrix_type::index>(r),static_cast<matrix_type::index>(c)});
+            if (step == solved.path.end()) {
+                std::cout << "--";
+            } else {
+                std::cout << std::setw(2) << std::distance(solved.path.begin(), step);
+            }
+            if (c != parsed.matrix.shape()[1] - 1) {
+                std::cout << ' ';
+            }
+        }
+        std::cout << '\n';
+    }
+    std::cout << term::reset;
+
+    std::cout
+        << "Score:\n"
+        << solved.score << '/' << ((1 << parsed.sequences.size()) - 1) << "\n"
+    ;
+
+    if (!matrix_good) {
+        std::cout
+            << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
+            << term::red << term::on_yellow << "|==WARNING==|" << term::reset
+            << " Detected unexpected values in " << term::bright_red << "matrix" << term::reset << ", result may be sub-optimal" << '\n'
+            << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
+        ;
+    }
+
+    if (!sequence_good) {
+        std::cout
+            << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
+            << term::red << term::on_yellow << "|==WARNING==|" << term::reset
+            << " Detected unexpected values in " << term::bright_cyan << "sequence" << term::reset << ", result may be sub-optimal" << '\n'
+            << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
+        ;
+    }
+
+    if (!matrix_good || !sequence_good) {
+        return EXIT_FAILURE;
+    } else if (load || no_autoclick) {
+        return EXIT_SUCCESS;
+    }
+#ifdef _WIN32
+    return clicker(window_name, *detected.matrix_length, solved.path) ? EXIT_SUCCESS : EXIT_FAILURE;
+#else
     return EXIT_SUCCESS;
+#endif
 }

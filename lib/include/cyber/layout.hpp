@@ -1,5 +1,7 @@
 #pragma once
 
+#include <opencv2/opencv.hpp>
+
 // Padded matrix width minimum
 static const cv::Point matrix_border_topcenter(489,336);
 
