@@ -28,7 +28,7 @@ void help(std::string_view name) {
     std::cout
     << "Usage: " << name << " [-h] [--load INPUT] [--save OUTPUT]\n"
         << '\n'
-        << "Cyberpunk 2077 - Breach Solver\n"
+        << "Cyberpunk 2077 - Breach Protocol Auto-Solver\n"
         << "  \n"
         << "optional arguments:\n"
         << "  -h, --help            show this help message and exit\n"
@@ -41,7 +41,7 @@ void help(std::string_view name) {
         << "                        disables auto-clicking (default: autoclick, iff screenshot)\n"
 #endif
         << "\n"
-        << "By default, " << name << " will take screenshots from a running copy of CP2077\n";
+        << "By default, " << name << " will take screenshots and autoclick a running copy of CP2077\n";
     ;
 }
 
