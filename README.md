@@ -1,12 +1,12 @@
-# Cyberpunk 2077 - Breach Protocol Auto Solver
+# Cyberpunk 2077 - Breach Protocol Auto-Solver
 
 ## Description
 
-The Cyberpunk 2077 "Breach Protocol Auto Solver" is a **Screen Capture + OCR + Auto Solver** for Cyberpunk 2077 on PC.
+The Cyberpunk 2077 "Breach Protocol Auto-Solver" is a **Screen Capture + OCR + Solver + Auto-Clicker** for Breaches in Cyberpunk 2077 on PC.
 
 My goal was to try and make the Breach Protocol minigame as easy as possible for PC players.
 
-I think the minigame is fun, but I felt it detracts from the mood of the rest of the game, especailly for completionists like myself.
+I think the minigame is fun, but I felt it detracts from the explosive ascension in the rest of the game, especailly for completionists like myself!
 
 (+ I hate Sudokus, and all brute-force problems :P)
 
@@ -14,22 +14,23 @@ I think the minigame is fun, but I felt it detracts from the mood of the rest of
 
 ## Usage
 
-cyber_breach works by either taking a screenshot of a running game, or importing an image from a file.
-
+cyber_breach works by taking a screenshot of a running game, parsing it, solving it, and then generating clicks on the running game.
 
 ```
-Usage: cyber_breach.exe [-h] [--load INPUT] [--save OUTPUT]
+Usage: cyber_breach.exe [-h] [-l INPUT] [-s OUTPUT] [--no-autoclick]
 
-Cyberpunk 2077 - Breach Solver
-  
+Cyberpunk 2077 - Breach Protocol Auto-Solver
+
 optional arguments:
   -h, --help            show this help message and exit
   --load INPUT, -l INPUT
-                        input image to load screenshot (default: screenshot)
+                        input file to load screenshot (default: capture)
   --save OUTPUT, -s OUTPUT
-                        output dir to save screenshot (default: disabled)
+                        output directory to save screenshot (default: disabled)
+  --no-autoclick
+                        turn off auto-clicking (default: autoclick, iff capture)
 
-By default, cyber_breach.exe will take screenshots from a running copy of CP2077
+By default cyber_breach.exe will capture and auto-click a running copy of CP2077
 ```
 
 When you launch cyber_breach, it tries to detect from a running instance of CP2077 (or from a previously saved image):
@@ -44,15 +45,19 @@ It then performs:
 - Calculates the highest scoring path through the matrix
 - Displays the result on-screen
 
-You can optionally launch cyber_breach on a saved image.  You can also tell cyber_breach to save newly captured screenshots to a directory of your choosing.
+Additionally, if a screenshot was captured from a live game, it can:
+
+- Generate mouse movements and clicks, to auto-solve most breaches in **less than 1/2 a second.**
+
+It does all this without touching any of the in-game memory, so it's safe to use without any long-term effects.
+
+You can also launch cyber_breach on a previously saved image.  Or you can instruct cyber_breach to save newly captured screenshots to a directory of your choosing.  Saved screenshots might be useful if cyber_breach cannot solve a particular breach, or if you are afraid of it making mistakes (though you may be hard-pressed to ever find any =P).  Saved images may be useful if filing Github Issues for new resolutions, and for developers to add expanding detection.
 
 ## Requirements
 
 - The screenshot must be **FROM A 1080P DISPLAY**.  *(I am still working on support for different resolutions!)*
 
 - The breach **MUST NOT HAVE ALREADY BEEN STARTED** with any boxes clicked, although pre-installed sequences are automatically skipped by the solver if detected.  *(i.e. You'll be good as long as none of the boxes in the matrix have already been clicked)*
-
-- The screenshot must have nothing covering **(A) THE MATRIX BOX**, **(B) THE BUFFER BOX**, or **(C) THE SEQUENCE BOX**; including **THE BLUE CURSOR** or **ANY WINDOW** you used to launch the solver.  Covering any other part of Breach Protocol screen outside of the above exceptions is fine.
 
 ## Build Dependencies
 
