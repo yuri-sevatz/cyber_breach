@@ -7,6 +7,7 @@
 #include <string_view>
 #include <unordered_set>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
 #ifdef _WIN32
@@ -51,7 +52,8 @@ void help(std::string_view name) {
         << term::red << "[-l INPUT]" << term::reset << ' '
 #ifdef _WIN32
         << term::yellow << "[-s OUTPUT]" << term::reset << ' '
-        << term::green << "[--no-autoclick]" << term::reset << ' '
+        << term::green << "[--interactive]" << term::reset << ' '
+        << term::blue << "[--no-autoclick]" << term::reset << ' '
 #endif
         << "\n\n"
         << term::bright_yellow << term::reverse << term::bold << "Cyberpunk 2077" << term::reset << " - "
@@ -74,9 +76,14 @@ void help(std::string_view name) {
         << "output directory to save screenshot" << ' '
         << '(' << "default:" << ' ' << term::underline << "disabled" << term::reset << ')' << '\n'
         << "  "
-        << term::green << "--no-autoclick" << term::reset << '\n'
+        << term::green << "--interactive" << term::reset << ", " << term::green << "-i" << term::reset << '\n'
         << "                        "
-        << "turn off auto-clicking" << ' '
+        << "enable interactive prompts" << ' '
+        << '(' << "default:" << ' ' << term::underline << "disabled" << term::reset << ')' << '\n'
+        << "  "
+        << term::blue << "--no-autoclick" << term::reset << term::reset << '\n'
+        << "                        "
+        << "disable auto-clicking answer" << ' '
         << '(' << "default:" << ' ' << term::underline << "autoclick" << term::reset << ", iff capture" << ')' << '\n'
 #endif
         << '\n'
@@ -96,7 +103,10 @@ int main(int argc, char * argv[]) {
     std::optional<std::filesystem::path> save;
 #endif
 
+#ifdef _WIN32
     bool no_autoclick = false;
+    bool interactive = false;
+#endif
 
     auto argi = args.begin() + 1;
     for (; argi != args.end(); ++argi) {
@@ -118,6 +128,8 @@ int main(int argc, char * argv[]) {
                 std::cerr << term::red << "error: " << term::reset << "argument --save/-s: expected one argument" << std::endl;
                 return EXIT_FAILURE;
             }
+        } else if (*argi == "--interactive" || *argi == "-i") {
+            interactive = true;
         } else if (*argi == "--no-autoclick") {
             no_autoclick = true;
 #endif
@@ -145,7 +157,7 @@ int main(int argc, char * argv[]) {
             const std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
             std::ostringstream os;
             os << std::put_time(std::localtime(&time), "%Y%m%d%H%M%S.png");
-            if (!cv::imwrite((*save / os.str()).string(), image)) {
+            if (!cv::imwrite((*save / os.str()).string(), image, {cv::IMWRITE_PNG_COMPRESSION, 0})) {
                 std::cerr << term::red << "error: " << term::reset << "could not save screenshot, aborting" << std::endl;
                 return EXIT_FAILURE;
             }
@@ -222,14 +234,19 @@ int main(int argc, char * argv[]) {
         << term::bright_cyan
     ;
     for (auto sequence = parsed.sequences.begin(); sequence != parsed.sequences.end(); ++sequence) {
+        for (auto step = sequence->begin(); step != sequence->end(); ++step) {
+            std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << (int) *step;
+            if (step + 1 != sequence->end()) {
+                std::cout << ' ';
+            } else {
+                std::cout << '\n';
+            }
+        }
         boost::io::ios_base_all_saver _(std::cout);
-        std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase;
-        std::copy(sequence->begin(), sequence->end(), std::ostream_iterator<int>(std::cout, " "));
-        std::cout << '\n';
     }
     std::cout << term::reset;
 
-    const std::unordered_set<byte_type> expected = {0x1C, 0x55, 0x7A, 0xBD, 0xE9};
+    const std::unordered_set<byte_type> expected = {0x1C, 0x55, 0x7A, 0xBD, 0xE9, 0xFF};
 
     bool matrix_good = true;
     for (const auto & line : parsed.matrix) {
@@ -293,35 +310,93 @@ int main(int argc, char * argv[]) {
     }
     std::cout << term::reset;
 
+    const score_type desired_score = (1 << parsed.sequences.size()) - 1;
+    const bool score_good = (solved.score == desired_score);
     std::cout
         << "Score:\n"
-        << solved.score << '/' << ((1 << parsed.sequences.size()) - 1) << '\n'
+        << solved.score << '/' << desired_score << '\n'
     ;
 
     if (!matrix_good) {
-        std::cout
-            << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
-            << term::red << term::on_yellow << "|==WARNING==|" << term::reset
+        std::cout << '\n'
+            << term::grey << term::on_yellow << "|===========|" << term::reset << '\n'
+            << term::grey << term::on_yellow << "|==WARNING==|" << term::reset
             << " Detected unexpected values in " << term::bright_red << "matrix" << term::reset << ", result may be sub-optimal" << '\n'
-            << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
+            << term::grey << term::on_yellow << "|===========|" << term::reset << '\n'
         ;
     }
 
     if (!sequence_good) {
-        std::cout
-            << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
-            << term::red << term::on_yellow << "|==WARNING==|" << term::reset
+        std::cout << '\n'
+            << term::grey << term::on_yellow << "|===========|" << term::reset << '\n'
+            << term::grey << term::on_yellow << "|==WARNING==|" << term::reset
             << " Detected unexpected values in " << term::bright_cyan << "sequence" << term::reset << ", result may be sub-optimal" << '\n'
-            << term::red << term::on_yellow << "|===========|" << term::reset << '\n'
+            << term::grey << term::on_yellow << "|===========|" << term::reset << '\n'
         ;
     }
 
-    if (!matrix_good || !sequence_good) {
-        return EXIT_FAILURE;
-    } else if (load || no_autoclick) {
-        return EXIT_SUCCESS;
+    if (!score_good) {
+        std::cout << '\n'
+            << term::grey << term::on_white << "|==========|" << term::reset << '\n'
+            << term::grey << term::on_white << "|==NOTICE==|" << term::reset
+            << " Could not attain an optimal score; consider closing + re-opening the breach to generate a new matrix." << '\n'
+            << term::grey << term::on_white << "|==========|" << term::reset << '\n'
+        ;
     }
+
+    const bool suboptimal = (!matrix_good || !sequence_good || !score_good);
 #ifdef _WIN32
+    if (load || no_autoclick) {
+        return EXIT_SUCCESS;
+    } else if (suboptimal || interactive) {
+        if (!interactive) {
+            std::cout << "\n\a" << "Aborting." << std::flush;
+            return EXIT_FAILURE;
+        }
+        std::cout << '\n'
+            << term::bold << "Would you like to submit" << (suboptimal ? " anyway" : "") << '?' << term::reset << ' '
+            << '['
+            << term::bright_green << term::bold << "Yes" << term::reset
+            << '/'
+            << term::bright_red << term::bold << "No" << term::reset
+            << ']'
+            << ' ' << std::flush
+        ;
+
+        bool submit = false;
+        while(true) {
+            std::string string;
+            const std::istream::sentry _(std::cin, true);
+            if (!std::getline(std::cin, string).fail()) {
+                static constexpr const std::string_view yes = "yes";
+                static constexpr const std::string_view no = "no";
+                if (
+                    (submit = (string.empty() || boost::algorithm::iequals(string, yes.substr(0, string.size())))) ||
+                    boost::algorithm::iequals(string, no.substr(0, string.size()))
+                ) {
+                    break;
+                } else {
+                    std::cout << "Sorry, response \'" << string << "\' not understood. "
+                        << '['
+                        << term::bright_green << term::bold << "Yes" << term::reset
+                        << '/'
+                        << term::bright_red << term::bold << "No" << term::reset
+                        << ']'
+                        << ' ' << std::flush
+                    ;
+                }
+            } else {
+                break;
+            }
+        };
+
+        if (submit) {
+            std::cout << '\n' << "Submitting." << std::endl;
+        } else {
+            std::cout << '\n' << "Quitting." << std::endl;
+            return EXIT_FAILURE;
+        }
+    }
     return clicker(window_name, *detected.matrix_length, solved.path) ? EXIT_SUCCESS : EXIT_FAILURE;
 #else
     return EXIT_SUCCESS;
