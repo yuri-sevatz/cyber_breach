@@ -95,8 +95,14 @@ sequences_type parse_sequences(cv::text::OCRTesseract & ocr, cv::Mat image, matr
             cv::Mat bitwise_not;
             cv::bitwise_not(cell, bitwise_not);
 
+            cv::Mat grayscale;
+            cv::cvtColor(bitwise_not, grayscale, cv::COLOR_BGR2GRAY);
+
+            cv::Mat enhance;
+            cv::adaptiveThreshold(grayscale, enhance, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 3, 10);
+
             std::string output_text;
-            ocr.run(bitwise_not, output_text);
+            ocr.run(enhance, output_text);
 
             output_text.erase(std::remove_if(output_text.begin(), output_text.end(), [](char x){return std::isspace(x);}), output_text.end());
 
