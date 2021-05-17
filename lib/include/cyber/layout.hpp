@@ -31,9 +31,9 @@ static const cv::Size buffer_cell_margin_size(buffer_cell_margin_topleft + buffe
 static const int sequences_border_matrix_left_offset = 46;
 static const int sequences_border_top = 332;
 
-static const cv::Size sequence_cell_size(32, 69); // NOTE: The height is larger to account for padding reset bug (below)
+static const cv::Size sequence_cell_size(32, 68); // NOTE: The height is larger to account for padding reset bug (below)
 static const cv::Size sequence_cell_padding(10, 0); // NOTE: The height resets its padding to 0 after moving the mouse
 static const cv::Size sequences_margin_topleft(20, 10);
-static const cv::Size sequences_margin_bottomright(12, 25);
+static const cv::Size sequences_margin_bottomright(12, 22);
 static const cv::Size sequences_margin_size(sequences_margin_topleft + sequences_margin_bottomright);
 
