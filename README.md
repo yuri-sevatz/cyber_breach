@@ -17,7 +17,7 @@ I think the minigame is fun, but I felt it detracts from the explosive ascension
 cyber_breach works by taking a screenshot of a running game, parsing it, solving it, and then generating clicks on the running game.
 
 ```
-Usage: cyber_breach.exe [-h] [-l INPUT] [-s OUTPUT] [--no-autoclick]
+Usage: cyber_breach.exe [-h] [-l INPUT] [-s OUTPUT] [--interactive] [--no-autoclick]
 
 Cyberpunk 2077 - Breach Protocol Auto-Solver
 
@@ -27,8 +27,10 @@ optional arguments:
                         input file to load screenshot (default: capture)
   --save OUTPUT, -s OUTPUT
                         output directory to save screenshot (default: disabled)
+  --interactive, -i
+                        enable interactive prompts (default: disabled)
   --no-autoclick
-                        turn off auto-clicking (default: autoclick, iff capture)
+                        disable auto-clicking answer (default: autoclick, iff capture)
 
 By default cyber_breach.exe will capture and auto-click a running copy of CP2077
 ```
