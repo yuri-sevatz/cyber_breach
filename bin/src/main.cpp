@@ -26,28 +26,9 @@
 constexpr const char * const window_name = "Cyberpunk 2077 (C) 2020 by CD Projekt RED";
 
 void help(std::string_view name) {
-    std::cout << "Usage: ";
-
-    const std::array<std::ostream &(*)(std::ostream&),7> colors({
-        term::bright_red,
-        term::bright_green,
-        term::bright_yellow,
-        term::bright_blue,
-        term::bright_magenta,
-        term::bright_cyan,
-        term::bright_white,
-    });
-    /*
-    auto color = colors.begin();
-    for (auto ch : name) {
-        if (color == colors.end()) {
-            color = colors.begin();
-        }
-        std::cout << *color++ << ch << term::reset;
-    }
-    */
-    std::cout << term::bright_cyan << term::underline << term::bold << name << term::reset;
-    std::cout<< ' '
+    std::cout << "Usage: "
+        << term::bright_cyan << term::underline << term::bold << name << term::reset;
+    std::cout << ' '
         << term::magenta << "[-h]" << term::reset << ' '
         << term::red << "[-l INPUT]" << term::reset << ' '
 #ifdef _WIN32
