@@ -1,8 +1,7 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.29)
 
 project(cyber_test)
 
-find_package(Boost REQUIRED COMPONENTS graph)
 find_package(OpenCV REQUIRED COMPONENTS core dnn imgcodecs imgproc ml text)
 
 set(Boost_USE_MULTITHREADED ON)
@@ -15,7 +14,7 @@ set(${PROJECT_NAME}_sources
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${OpenCV_LIBS} cyber)
 
