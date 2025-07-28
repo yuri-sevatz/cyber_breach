@@ -16,9 +16,7 @@
 #endif
 #include <cyber/common.hpp>
 #include <cyber/detect.hpp>
-#ifdef _WIN32
 #include <cyber/init.hpp>
-#endif
 #include <cyber/parse.hpp>
 #include <cyber/solve.hpp>
 #include <cyber/term.hpp>
@@ -75,9 +73,7 @@ void help(std::string_view name) {
 int main(int argc, char * argv[]) {
     const std::vector<std::string_view> args(argv, argv + argc);
 
-#if _WIN32
     init();
-#endif
 
     std::optional<std::filesystem::path> load;
 #ifdef _WIN32
