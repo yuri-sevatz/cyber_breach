@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.29)
 
 project(cyber_test)
 
-find_package(Boost REQUIRED COMPONENTS graph)
 find_package(OpenCV REQUIRED COMPONENTS core dnn imgcodecs imgproc ml text)
 
 set(Boost_USE_MULTITHREADED ON)

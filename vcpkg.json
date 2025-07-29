@@ -1,6 +1,9 @@
 {
     "dependencies": [
         {
+            "name": "boost"
+        },
+        {
             "name": "opencv",
             "features": ["contrib"]
         },
