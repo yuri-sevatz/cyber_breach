@@ -2,9 +2,13 @@
 #include <cyber/mouse.hpp>
 
 #include <iostream>
+#include <thread>
 #include <vector>
 
+#include <ShellScalingApi.h>
 #include <Windows.h>
+
+#pragma comment(lib, "Shcore.lib")
 
 namespace {
 
@@ -64,10 +68,28 @@ cv::Mat captureScreenMat(HWND hwnd) {
         return cv::Mat();
     }
 
+    // Get the monitor owning the window
+    HMONITOR hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONULL);
+    if (!hMonitor) {
+        std::cerr << "MonitorFromWindow returned NULL" << std::endl;
+        return cv::Mat();
+    }
+
+    // Get the dpi of the monitor
+    UINT dpiX = 0, dpiY = 0;
+    if (HRESULT hr = GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY)) {
+        std::cerr << "GetDpiForMonitor returned " << hr << std::endl;
+        return cv::Mat();
+    }
+
+    // Get the dpi of the window
+    UINT dpi = GetDpiForWindow(hwnd);
+
+    // Calculate screenshot area
     int screenx = rect.left;
     int screeny = rect.top;
-    int width = rect.right - rect.left;
-    int height = rect.bottom - rect.top;
+    int width = (rect.right - rect.left) * dpi / dpiX;
+    int height = (rect.bottom - rect.top) * dpi / dpiY;
 
     // create a bitmap
     HBITMAP hbwindow = CreateCompatibleBitmap(hdcScreen, width, height);
@@ -76,7 +98,6 @@ cv::Mat captureScreenMat(HWND hwnd) {
         return cv::Mat();
     }
 
-    BITMAPINFOHEADER bi = createBitmapHeader(width, height);
 
     // use the previously created device context with the bitmap
     if (!SelectObject(hdcScreenCompatibleDC, hbwindow)) {
@@ -93,14 +114,15 @@ cv::Mat captureScreenMat(HWND hwnd) {
         return cv::Mat();
     }
 
-    // create mat object
+    // Create mat object
     cv::Mat mat;
     mat.create(height, width, CV_8UC4);
 
     // Gets the "bits" from the bitmap, and copies them into the buffer that's pointed to by mat.data
+    BITMAPINFOHEADER bi = createBitmapHeader(width, height);
     GetDIBits(hdcScreenCompatibleDC, hbwindow, 0, height, mat.data, (BITMAPINFO*) &bi, DIB_RGB_COLORS);
 
-    // avoid memory leak
+    // Avoid memory leak
     if (!DeleteObject(hbwindow)) {
         std::cerr << "DeleteObject returned FALSE" << std::endl;
     }
